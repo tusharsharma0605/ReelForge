@@ -1,0 +1,397 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ReelForge</title>
+<link rel="icon" href="/icon.png">
+<style>
+:root{--bg:#0b0b10;--panel:#14141c;--panel2:#1b1b26;--line:#2a2a3a;--txt:#ececf3;--mut:#8b8ba3;--acc:#7c5cff;--acc2:#ff4d8d;--ok:#2bd67b;--err:#ff5d5d}
+*{box-sizing:border-box}html,body{margin:0;height:100%;background:var(--bg);color:var(--txt);font:14px/1.45 "Segoe UI",system-ui,sans-serif}
+header{display:flex;align-items:center;gap:12px;padding:12px 20px;border-bottom:1px solid var(--line);background:#0e0e15}
+.logo{font-weight:800;font-size:18px;letter-spacing:.3px;background:linear-gradient(90deg,var(--acc),var(--acc2));-webkit-background-clip:text;color:transparent}
+.pill{font-size:12px;padding:3px 10px;border-radius:99px;background:var(--panel2);color:var(--mut);border:1px solid var(--line)}
+.pill.on{color:var(--ok);border-color:#1f5a3a}
+header .sp{flex:1}
+button{font:inherit;color:var(--txt);background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:8px 14px;cursor:pointer}
+button:hover{border-color:#44445c}button.primary{background:linear-gradient(90deg,var(--acc),var(--acc2));border:0;font-weight:700}
+button.primary:disabled{opacity:.5;cursor:wait}button.ghost{background:transparent}button.sm{padding:4px 10px;font-size:12px}
+main{display:grid;grid-template-columns:330px 1fr 420px;gap:14px;padding:14px;height:calc(100% - 59px)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;overflow:auto;min-height:0}
+h3{margin:0 0 10px;font-size:13px;text-transform:uppercase;letter-spacing:1px;color:var(--mut)}
+.drop{border:2px dashed var(--line);border-radius:12px;padding:18px;text-align:center;color:var(--mut);cursor:pointer;transition:.15s}
+.drop.hover{border-color:var(--acc);color:var(--txt);background:#7c5cff10}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.asset{position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;background:var(--panel2);border:2px solid transparent;cursor:pointer}
+.asset.sel{border-color:var(--acc)}.asset img{width:100%;height:100%;object-fit:cover;display:block}
+.asset .ic{display:flex;align-items:center;justify-content:center;height:100%;font-size:11px;color:var(--mut);padding:6px;text-align:center;word-break:break-all}
+.asset .badge{position:absolute;left:4px;bottom:4px;font-size:10px;background:#000a;padding:1px 6px;border-radius:6px}
+.asset .x{position:absolute;right:3px;top:3px;width:20px;height:20px;border-radius:50%;background:#000b;border:0;padding:0;font-size:12px;display:none}
+.asset:hover .x{display:block}.asset .num{position:absolute;left:4px;top:4px;background:var(--acc);font-size:10px;font-weight:700;border-radius:6px;padding:0 6px}
+label{display:block;font-size:12px;color:var(--mut);margin:12px 0 5px}
+textarea,input,select{width:100%;font:inherit;color:var(--txt);background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:9px 11px;outline:none}
+textarea:focus,input:focus,select:focus{border-color:var(--acc)}textarea{resize:vertical}
+#prompt{min-height:90px;font-size:15px}.row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.chk{display:flex;align-items:center;gap:8px;margin-top:12px;color:var(--txt);font-size:13px}.chk input{width:auto}
+.go{display:flex;gap:10px;align-items:center;margin-top:16px}.go .primary{flex:1;padding:13px;font-size:15px}
+.bar{height:8px;background:var(--panel2);border-radius:99px;overflow:hidden;margin:10px 0}.bar>div{height:100%;width:0;background:linear-gradient(90deg,var(--acc),var(--acc2));transition:width .4s}
+video{width:100%;max-height:52vh;background:#000;border-radius:12px;display:block}
+.log{font:12px Consolas,monospace;color:var(--mut);background:#0c0c12;border-radius:10px;padding:8px;max-height:130px;overflow:auto;white-space:pre-wrap;margin-top:8px}
+.scenes{display:flex;flex-direction:column;gap:6px;margin-top:8px}.sc{display:flex;gap:8px;background:var(--panel2);border-radius:10px;padding:6px;font-size:12px}
+.sc img{width:46px;height:46px;object-fit:cover;border-radius:6px}.sc .m{color:var(--mut)}
+.hist{display:flex;flex-direction:column;gap:6px}.hi{display:flex;align-items:center;gap:10px;background:var(--panel2);padding:7px;border-radius:10px;font-size:12px;cursor:pointer}
+.hi img,.hi .nothumb{width:46px;height:68px;object-fit:cover;border-radius:6px;flex:none;background:#000}.hi .nothumb{display:flex;align-items:center;justify-content:center;color:var(--mut);font-size:10px}
+.hi .meta{flex:1;min-width:0}.hi .meta b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.hi .acts{display:flex;gap:4px;margin-top:4px;flex-wrap:wrap}
+.hgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;max-height:70vh;overflow:auto}
+.hi.big{flex-direction:column;align-items:stretch}.hi.big img,.hi.big .nothumb{width:100%;height:220px}
+.hi:hover{outline:1px solid var(--line)}.muted{color:var(--mut);font-size:12px}.err{color:var(--err)}
+.modal{position:fixed;inset:0;background:#000a;display:none;align-items:center;justify-content:center;z-index:9}.modal.open{display:flex}
+.modal .card{width:520px;max-width:92vw}.tabs{display:flex;gap:6px;margin-bottom:8px}.tabs button.act{border-color:var(--acc)}
+#planEdit{font:12px Consolas,monospace;min-height:220px}
+.chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}.chips span{font-size:11px;padding:3px 9px;border-radius:99px;background:var(--panel2);border:1px solid var(--line);cursor:pointer;color:var(--mut)}
+.chips span:hover{color:var(--txt);border-color:var(--acc)}
+.thread{display:flex;flex-direction:column;gap:6px;margin:8px 0;max-height:220px;overflow:auto}
+.msg{background:var(--panel2);border-radius:10px;padding:7px 10px;font-size:12px}.msg.me{background:#7c5cff22;border:1px solid #7c5cff44}
+.msg ul{margin:4px 0 0 16px;padding:0;color:var(--mut)}.msg a{color:var(--acc);cursor:pointer}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">ReelForge</div>
+  <span id="aiPill" class="pill">Built-in director</span>
+  <div class="sp"></div>
+  <button class="ghost" onclick="openHistory()">History</button>
+  <button class="ghost" onclick="api('/api/open-folder',{method:'POST'})">Open output folder</button>
+  <button onclick="openSettings()">Settings</button>
+  <button class="ghost" onclick="quitApp()" title="Stop the local server">Quit</button>
+</header>
+<main>
+  <section class="card">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><h3 style="margin:0;flex:1">Media library</h3>
+      <button class="sm ghost" onclick="cleanLibrary()" title="Remove downloaded/generated items, keep your uploads">Clean up</button></div>
+    <div id="drop" class="drop">Drop photos, videos, music, scripts (txt/pdf)<br>or <b>click to browse</b></div>
+    <input id="file" type="file" multiple hidden>
+    <div class="muted" style="margin-top:8px">Click items to use them in the next video (order = suggested order). <b>Nothing selected = prompt-only</b>: the director writes, finds photos online and designs cards for you.</div>
+    <div id="grid" class="grid"></div>
+  </section>
+
+  <section class="card">
+    <h3>Create</h3>
+    <label>Prompt - what should this video be?</label>
+    <textarea id="prompt" placeholder="e.g. A funny reel where a hiring platform logo kills an ATS  -  or  -  A cinematic 30s documentary on how hard drives are made  -  or  -  A travel reel of my Goa trip (photos selected)"></textarea>
+    <label>Script / narration (optional)</label>
+    <textarea id="script" rows="4" placeholder="Exact lines for voiceover or captions. Leave empty to let the director write them."></textarea>
+    <label>Direction & style notes (optional)</label>
+    <textarea id="direction" rows="2" placeholder="e.g. cinematic teal-orange look, slow zooms, bold captions at the top, 20 seconds"></textarea>
+    <div class="row">
+      <div><label>Format</label><select id="aspect"><option value="9:16">9:16 Reel / Short</option><option value="16:9">16:9 YouTube</option><option value="1:1">1:1 Square</option><option value="4:5">4:5 Feed</option></select></div>
+      <div><label>Length (sec, 0 = auto)</label><input id="target" type="number" min="0" max="180" value="0"></div>
+      <div><label>Text style</label><select id="textStyle"><option value="auto">Auto (director)</option><option value="bold">Bold outline</option><option value="box">Color box</option><option value="minimal">Minimal</option><option value="neon">Neon glow</option></select></div>
+    </div>
+    <div class="row">
+      <div><label>Music</label><select id="music"></select></div>
+      <div><label>Voice</label><select id="voice"></select></div>
+      <div><label>Voice speed</label><select id="rate"><option value="-2">Slow</option><option value="0" selected>Normal</option><option value="2">Fast</option></select></div>
+    </div>
+    <div class="row">
+      <div><label>Captions</label><select id="captions"><option value="karaoke">Word-by-word (reel style)</option><option value="off">Off</option></select></div>
+      <div><label>Look</label><select id="look"><option value="auto">Auto (director)</option><option value="cinematic">Cinematic film (bars + grain)</option><option value="clean">Clean</option></select></div>
+      <div><label>Sound effects</label><select id="sfx"><option value="1">On (whoosh, hits, pops)</option><option value="0">Off</option></select></div>
+    </div>
+    <label class="chk"><input type="checkbox" id="vo" checked> AI voiceover + narration (natural neural voice online; Windows voice offline)</label>
+    <label class="chk"><input type="checkbox" id="autoMedia" checked> Find photos &amp; clips online + design title/fact cards when needed</label>
+    <label class="chk"><input type="checkbox" id="research" checked> Research the topic online (Claude web search / Wikipedia)</label>
+    <label class="chk"><input type="checkbox" id="useAi" checked> Use Claude as director (when API key is set)</label>
+    <div class="row" style="grid-template-columns:1fr 2fr"><div><label>AI model for this video</label></div><div><select id="jobModel"></select></div></div>
+    <div class="go"><button id="goBtn" class="primary" onclick="generate()">Generate video</button></div>
+    <div id="status" class="muted" style="margin-top:12px"></div>
+    <div class="bar"><div id="barFill"></div></div>
+    <div id="log" class="log" hidden></div>
+  </section>
+
+  <section class="card">
+    <h3>Result</h3>
+    <video id="player" controls playsinline></video>
+    <details id="creditsBox" hidden style="margin-top:6px"><summary class="muted" style="cursor:pointer">Media credits (web photos/clips used)</summary><div id="credits" class="log" style="max-height:120px"></div></details>
+    <div class="go" style="margin-top:10px">
+      <a id="dl" download><button>Download MP4</button></a>
+      <button onclick="toggleTab('plan')">Edit plan (advanced)</button>
+    </div>
+    <div class="editbox">
+      <h3 style="margin-top:16px">Edit with a prompt</h3>
+      <div id="editTarget" class="muted">Generate a video or pick one from History, then describe changes.</div>
+      <div id="thread" class="thread"></div>
+      <textarea id="editPrompt" rows="3" placeholder="e.g. make it faster, change scene 1 text to &quot;Goa 2026&quot;, use a cinematic look, slow motion on the clip"
+        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();applyEdit()}"></textarea>
+      <div class="chips">
+        <span onclick="chip(this)">make it faster</span><span onclick="chip(this)">make it 15 seconds</span>
+        <span onclick="chip(this)">cinematic look</span><span onclick="chip(this)">black and white</span>
+        <span onclick="chip(this)">move text to the top</span><span onclick="chip(this)">neon captions</span>
+        <span onclick="chip(this)">hard cuts</span><span onclick="chip(this)">fade transitions</span>
+        <span onclick="chip(this)">slow motion on the clip</span><span onclick="chip(this)">remove scene 2</span>
+        <span onclick="chip(this)">swap scenes 1 and 2</span><span onclick="chip(this)">add the selected photos at the end</span>
+        <span onclick="chip(this)">add voiceover</span><span onclick="chip(this)">music quieter</span>
+        <span onclick="chip(this)">make it square</span><span onclick="chip(this)">change scene 1 text to "Your text"</span>
+        <span onclick="chip(this)">filmography look</span><span onclick="chip(this)">word by word captions</span>
+        <span onclick="chip(this)">dramatic music</span><span onclick="chip(this)">funny music</span><span onclick="chip(this)">no sound effects</span>
+        <span onclick="chip(this)">add a scene where a hiring platform logo kills the ATS</span>
+        <span onclick="chip(this)">add a photo of a city at night at the end</span><span onclick="chip(this)">add an end card saying Follow for more</span>
+      </div>
+      <button id="editBtn" class="primary" style="width:100%;margin-top:8px" onclick="applyEdit()">Apply change and re-render</button>
+    </div>
+    <div id="planBox" hidden>
+      <div class="scenes" id="scenes"></div>
+      <label>Edit plan JSON (durations, text, motions, transitions...) and re-render</label>
+      <textarea id="planEdit"></textarea>
+      <button class="primary" style="margin-top:8px;width:100%" onclick="rerender()">Re-render with edits</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;margin-top:18px"><h3 style="margin:0;flex:1">History</h3>
+      <button class="sm" onclick="openHistory()">View all</button><button class="sm ghost" onclick="delAllOut()">Delete all</button></div>
+    <div id="storage" class="muted" style="margin:6px 0"></div>
+    <div id="hist" class="hist"></div>
+  </section>
+</main>
+
+<div id="historyModal" class="modal" onclick="if(event.target===this)closeHistory()">
+  <div class="card" style="width:1000px;max-width:95vw">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><h3 style="margin:0;flex:1">All videos</h3>
+      <span id="storage2b" class="muted"></span><button class="sm ghost" onclick="delAllOut()">Delete all</button><button class="sm" onclick="closeHistory()">Close</button></div>
+    <div id="histGrid" class="hgrid"></div>
+  </div>
+</div>
+
+<div id="settings" class="modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="card">
+    <h3>Settings</h3>
+    <label>Claude (Anthropic) API key</label>
+    <input id="key" type="password" placeholder="sk-ant-...">
+    <div id="keyHint" class="muted" style="margin-top:4px"></div>
+    <label>Workspace ID (only needed if your key is not scoped to a workspace - Claude Console &gt; Settings &gt; Workspaces)</label>
+    <input id="workspace" placeholder="wrkspc_... (optional)">
+    <label>Default model</label>
+    <div style="display:flex;gap:6px"><select id="model"></select><button class="sm" onclick="loadModels(true)" title="Fetch the models your key can use">Refresh</button></div>
+    <div id="modelHint" class="muted" style="margin-top:4px"></div>
+    <div class="muted" style="margin-top:8px">The key is stored only on this PC in <code>ReelForge\data\settings.json</code>. Without a key the built-in rule-based director is used.</div>
+    <label>Pexels API key (optional, free - best stock photos &amp; video clips; get one at pexels.com/api)</label>
+    <input id="pexels" type="password" placeholder="Pexels key">
+    <div id="pexelsHint" class="muted" style="margin-top:4px"></div>
+    <div class="go">
+      <button class="primary" onclick="saveSettings()">Save</button>
+      <button onclick="testKey()">Test key</button>
+      <button class="ghost" onclick="clearKey()">Remove key</button>
+    </div>
+    <div id="testRes" class="muted" style="margin-top:8px"></div>
+    <label class="chk"><input type="checkbox" id="autoClean" onchange="api('/api/settings',{json:{auto_clean:this.checked}})">
+      Auto-delete downloaded photos, designed cards &amp; animations after each video (your uploads are kept; edits re-fetch what they need)</label>
+    <div class="go"><button class="ghost" onclick="cleanLibrary()">Clean library now</button><button class="ghost" onclick="delAllOut()">Delete all videos</button></div>
+    <div id="storage2" class="muted" style="margin-top:8px"></div>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+let assets = [], selected = [], lastReq = null, poll = null;
+async function api(url, opt = {}) {
+  if (opt.json) { opt.body = JSON.stringify(opt.json); opt.headers = {'Content-Type': 'application/json'}; opt.method = opt.method || 'POST'; }
+  const r = await fetch(url, opt); if (!r.ok) throw new Error(await r.text()); return r.json();
+}
+const fmtDur = s => s ? (s >= 60 ? Math.floor(s/60) + ':' + String(Math.round(s%60)).padStart(2,'0') : s.toFixed(1) + 's') : '';
+
+async function loadAssets() {
+  assets = await api('/api/assets');
+  selected = selected.filter(id => assets.some(a => a.id === id));
+  renderGrid();
+  const m = $('music'), cur = m.value;
+  m.innerHTML = '<option value="">Auto (selected audio, else composed to match)</option>' +
+    ['cinematic', 'upbeat', 'calm', 'dramatic', 'quirky'].map(x => `<option value="gen:${x}">Composed: ${x}</option>`).join('') +
+    '<option value="none">No music</option>' +
+    assets.filter(a => a.kind === 'audio').map(a => `<option value="${a.id}">${esc(a.name)}</option>`).join('');
+  m.value = cur || '';
+}
+function renderGrid() {
+  $('grid').innerHTML = assets.map(a => {
+    const n = selected.indexOf(a.id);
+    const inner = a.thumb ? `<img src="${a.thumb}" loading="lazy">` : `<div class="ic">${a.kind.toUpperCase()}<br>${a.name}</div>`;
+    const badge = (a.source === 'design' ? 'DESIGN ' : a.credit ? 'WEB ' : '') +
+      (a.kind === 'video' ? 'VIDEO ' + fmtDur(a.duration) : a.kind === 'audio' ? 'AUDIO ' + fmtDur(a.duration) : a.kind === 'text' ? 'DOC' : '');
+    return `<div class="asset ${n >= 0 ? 'sel' : ''}" title="${a.name}" onclick="toggleSel('${a.id}')">${inner}
+      ${badge ? `<span class="badge">${badge}</span>` : ''}${n >= 0 ? `<span class="num">${n + 1}</span>` : ''}
+      <button class="x" onclick="event.stopPropagation();delAsset('${a.id}')">x</button></div>`;
+  }).join('');
+}
+function toggleSel(id) { const i = selected.indexOf(id); i >= 0 ? selected.splice(i, 1) : selected.push(id); renderGrid(); }
+async function delAsset(id) { if (confirm('Remove this file from the library?')) { await api('/api/assets/' + id, {method: 'DELETE'}); loadAssets(); } }
+async function uploadFiles(files) {
+  if (!files.length) return;
+  const fd = new FormData(); [...files].forEach(f => fd.append('files', f));
+  $('drop').textContent = `Uploading ${files.length} file(s)...`;
+  try { const added = await api('/api/assets', {method: 'POST', body: fd}); selected.push(...added.filter(a => a.kind !== 'other').map(a => a.id)); }
+  catch (e) { alert('Upload failed: ' + e.message); }
+  $('drop').innerHTML = 'Drop photos, videos, music, scripts (txt/pdf)<br>or <b>click to browse</b>';
+  loadAssets();
+}
+const drop = $('drop');
+drop.onclick = () => $('file').click();
+$('file').onchange = e => { uploadFiles(e.target.files); e.target.value = ''; };
+['dragenter', 'dragover'].forEach(ev => document.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('hover'); }));
+['dragleave', 'drop'].forEach(ev => document.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('hover'); }));
+document.addEventListener('drop', e => uploadFiles(e.dataTransfer.files));
+
+function request(plan = null) {
+  return {prompt: $('prompt').value, script: $('script').value, direction: $('direction').value, asset_ids: selected,
+    aspect: $('aspect').value, target_duration: +$('target').value || 0, voiceover: $('vo').checked, voice: $('voice').value,
+    voice_rate: +$('rate').value, text_style: $('textStyle').value, music_asset_id: $('music').value || null,
+    use_ai: $('useAi').checked, auto_media: $('autoMedia').checked, research: $('research').checked,
+    captions: $('captions').value, look: $('look').value, sfx: $('sfx').value === '1', model: $('jobModel').value, plan};
+}
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
+let current = null, thread = [];
+async function generate(plan = null, extra = {}) {
+  if (!plan && !$('autoMedia').checked && !assets.some(a => a.kind === 'image' || a.kind === 'video'))
+    return alert('Upload photos/videos, or tick "Find photos & clips online".');
+  if (!plan && !$('prompt').value.trim() && !$('script').value.trim()) return alert('Write a prompt (or a script) first.');
+  if (!plan) { thread = []; renderThread(); }
+  lastReq = {...request(plan), ...extra};
+  $('goBtn').disabled = $('editBtn').disabled = true; $('log').hidden = false; $('log').textContent = '';
+  try {
+    const job = await api('/api/jobs', {json: lastReq});
+    clearInterval(poll); poll = setInterval(() => track(job.id), 900);
+  } catch (e) { $('goBtn').disabled = $('editBtn').disabled = false; alert(e.message); }
+}
+async function track(id) {
+  const j = await api('/api/jobs/' + id);
+  $('barFill').style.width = j.progress + '%';
+  $('status').innerHTML = j.status === 'error' ? `<span class="err">Failed: ${esc(j.error)}</span>` : `${esc(j.stage)} (${j.progress}%)`;
+  $('log').textContent = j.log.join('\n'); $('log').scrollTop = 1e9;
+  if (j.plan && !$('planEdit').dataset.job?.startsWith(id)) showPlan(j.plan, id);
+  if (j.status === 'done' || j.status === 'error') {
+    clearInterval(poll); $('goBtn').disabled = $('editBtn').disabled = false;
+    const pending = thread.find(t => t.pending);
+    if (j.status === 'done') {
+      current = {plan: j.plan, name: j.name, url: j.output, title: j.plan.title}; setTarget();
+      showVideo(j.output, j.credits); $('status').innerHTML = `Done - ${j.duration}s video (${j.director} director)`; loadHistory(); loadAssets();
+      if (pending) Object.assign(pending, {pending: false, changes: j.changes, url: j.output, name: j.name});
+    } else if (pending) Object.assign(pending, {pending: false, error: j.error});
+    renderThread();
+  }
+}
+function setTarget() { $('editTarget').innerHTML = current ? `Editing: <b>${esc(current.title)}</b> <span class="muted">(${esc(current.name)})</span>` : 'Generate a video or pick one from History, then describe changes.'; }
+function renderThread() {
+  $('thread').innerHTML = thread.map(t => t.me !== undefined ? `<div class="msg me">${esc(t.me)}</div>` :
+    t.pending ? '<div class="msg muted">Working on it...</div>' :
+    t.error ? `<div class="msg err">${esc(t.error)}</div>` :
+    `<div class="msg">Changed:<ul>${(t.changes || []).map(c => `<li>${esc(c)}</li>`).join('')}</ul>
+      <a onclick='openOut(${JSON.stringify(t.url)}, ${JSON.stringify(t.name)}, true)'>view this version</a></div>`).join('');
+  $('thread').scrollTop = 1e9;
+}
+function chip(el) { const e = $('editPrompt'); e.value = e.value.trim() ? e.value.trim() + ', ' + el.textContent : el.textContent; e.focus(); }
+function applyEdit() {
+  const t = $('editPrompt').value.trim();
+  if (!t) return;
+  if (!current?.plan) return alert('Generate a video first (or click one in History) to edit it.');
+  thread.push({me: t}, {pending: true}); renderThread(); $('editPrompt').value = '';
+  generate(current.plan, {edit_instruction: t, parent: current.name || ''});
+}
+function showVideo(url, credits = []) {
+  $('player').src = url + '?t=' + Date.now(); $('dl').href = url; $('player').play().catch(() => {});
+  $('creditsBox').hidden = !credits?.length; $('credits').textContent = (credits || []).join('\n');
+}
+function showPlan(plan, id = '') {
+  $('planEdit').value = JSON.stringify(plan, null, 2); $('planEdit').dataset.job = id;
+  const by = Object.fromEntries(assets.map(a => [a.id, a]));
+  $('scenes').innerHTML = (plan.scenes || []).map((s, i) => `<div class="sc">${by[s.asset_id]?.thumb ? `<img src="${by[s.asset_id].thumb}">` : ''}
+    <div><b>${i + 1}.</b> ${s.text || '<span class=m>(no text)</span>'}<div class="m">${s.duration}s - ${s.motion} - ${s.transition}${s.narration ? ' - "' + s.narration + '"' : ''}</div></div></div>`).join('');
+}
+function toggleTab() { $('planBox').hidden = !$('planBox').hidden; }
+function rerender() {
+  let p; try { p = JSON.parse($('planEdit').value); } catch (e) { return alert('Plan JSON is invalid: ' + e.message); }
+  generate(p, {parent: current?.name || ''});
+}
+const mb = b => (b / 1e6).toFixed(1) + ' MB';
+function histCard(o, big) {
+  const n = JSON.stringify(o.name), u = JSON.stringify(o.url);
+  return `<div class="hi ${big ? 'big' : ''}" onclick='openOut(${u}, ${n}); closeHistory()'>
+    ${o.thumb ? `<img src="${o.thumb}" loading="lazy">` : '<div class="nothumb">MP4</div>'}
+    <div class="meta"><b>${esc(o.title)}</b>${o.instruction ? `<div class="muted">edit: ${esc(o.instruction)}</div>` : ''}
+      <div class="muted">${new Date(o.created * 1000).toLocaleString()}${o.duration ? ' - ' + o.duration + 's' : ''} - ${mb(o.size)}</div>
+      <div class="acts"><button class="sm" onclick='event.stopPropagation();openOut(${u}, ${n});closeHistory()'>Play / Edit</button>
+        <a href="${o.url}" download onclick="event.stopPropagation()"><button class="sm">Download</button></a>
+        <button class="sm ghost" onclick='event.stopPropagation();delOut(${n})'>Delete</button></div></div></div>`;
+}
+async function loadHistory() {
+  const [items, st] = await Promise.all([api('/api/outputs'), api('/api/storage')]);
+  window._hist = items;
+  $('hist').innerHTML = items.length ? items.slice(0, 6).map(o => histCard(o)).join('') +
+    (items.length > 6 ? `<button class="sm" onclick="openHistory()">See all ${items.length} videos</button>` : '') : '<div class="muted">Your videos will appear here.</div>';
+  $('histGrid').innerHTML = items.length ? items.map(o => histCard(o, true)).join('') : '<div class="muted">No videos yet.</div>';
+  const txt = `${st.videos} video(s) ${mb(st.videos_bytes)} - your uploads ${st.uploads} (${mb(st.uploads_bytes)}) - downloaded/generated ${st.generated} (${mb(st.generated_bytes)})`;
+  ['storage', 'storage2', 'storage2b'].forEach(id => $(id).textContent = txt);
+}
+function openHistory() { loadHistory(); $('historyModal').classList.add('open'); }
+function closeHistory() { $('historyModal').classList.remove('open'); }
+async function delAllOut() {
+  if (!confirm('Delete ALL videos in history? This cannot be undone.')) return;
+  await api('/api/outputs', {method: 'DELETE'}); current = null; setTarget(); loadHistory();
+}
+async function cleanLibrary() {
+  if (!confirm('Remove all downloaded web photos, designed cards and animations from the library? Your own uploads and finished videos are kept.')) return;
+  const r = await api('/api/cleanup', {method: 'POST'}); selected = []; loadAssets(); loadHistory();
+  alert(`Removed ${r.removed} item(s).`);
+}
+function openOut(url, name, keepThread = false) {
+  const o = (window._hist || []).find(x => x.name === name);
+  showVideo(url, o?.credits);
+  if (!o?.plan) return;
+  showPlan(o.plan); current = {plan: o.plan, name: o.name, url: o.url, title: o.title}; setTarget();
+  if (!keepThread) { thread = o.instruction ? [{me: o.instruction}, {changes: o.changes, url: o.url, name: o.name}] : []; renderThread(); }
+}
+async function delOut(name) {
+  if (!confirm('Delete this video?')) return;
+  await api('/api/outputs/' + encodeURIComponent(name), {method: 'DELETE'});
+  if (current?.name === name) { current = null; setTarget(); }
+  loadHistory();
+}
+
+async function loadModels(manual = false) {
+  const r = await api('/api/models');
+  const opts = r.models.map(m => `<option value="${esc(m.id)}">${esc(m.label)}${m.label.includes(m.id) ? '' : ' (' + esc(m.id) + ')'}</option>`).join('');
+  const prevJob = $('jobModel').value;
+  $('model').innerHTML = opts; $('model').value = r.current;
+  $('jobModel').innerHTML = `<option value="">Default (${esc(r.current)})</option>` + opts; $('jobModel').value = prevJob || '';
+  $('modelHint').textContent = r.live ? `${r.models.length} models available to your key.` :
+    'Showing the current Claude lineup (live list appears once your key works).';
+  if (manual) $('testRes').textContent = r.live ? 'Model list refreshed from Anthropic.' : 'Could not fetch the live list - check key / workspace ID.';
+}
+async function loadSettings() {
+  const s = await api('/api/settings');
+  $('workspace').value = s.workspace_id || '';
+  loadModels();
+  $('keyHint').textContent = s.has_key ? 'Key saved (' + s.key_hint + ')' : 'No key saved';
+  $('pexelsHint').textContent = s.has_pexels ? 'Pexels key saved (' + s.pexels_hint + ')' : 'No Pexels key - using Wikimedia/Wikipedia free images';
+  $('autoClean').checked = s.auto_clean;
+  $('aiPill').textContent = s.has_key ? 'Claude director: ' + s.model : 'Built-in director (no API key)';
+  $('aiPill').classList.toggle('on', s.has_key);
+}
+function openSettings() { $('settings').classList.add('open'); $('testRes').textContent = ''; }
+async function saveSettings() {
+  const body = {model: $('model').value, workspace_id: $('workspace').value}; if ($('key').value) body.anthropic_api_key = $('key').value;
+  if ($('pexels').value) body.pexels_api_key = $('pexels').value;
+  await api('/api/settings', {json: body}); $('key').value = ''; $('pexels').value = ''; await loadSettings(); $('testRes').textContent = 'Saved.';
+}
+async function clearKey() { await api('/api/settings', {json: {anthropic_api_key: ''}}); loadSettings(); $('testRes').textContent = 'Key removed.'; }
+async function testKey() {
+  await saveSettings(); $('testRes').textContent = 'Testing...';
+  const r = await api('/api/settings/test', {method: 'POST'});
+  $('testRes').innerHTML = r.ok ? `<span style="color:var(--ok)">Key works with ${esc(r.model)}!</span>` : `<span class="err">${esc(r.error)}</span>`;
+  if (r.ok) loadModels();
+}
+async function quitApp() { if (confirm('Stop ReelForge?')) { await api('/api/shutdown', {method: 'POST'}).catch(() => {}); document.body.innerHTML = '<h2 style="padding:40px">ReelForge stopped. You can close this tab.</h2>'; } }
+
+(async () => {
+  loadAssets(); loadHistory(); loadSettings();
+  const v = await api('/api/voices').catch(() => []);
+  $('voice').innerHTML = v.length ? v.map(n => `<option value="${esc(n)}">${n.endsWith('Neural') ? 'Natural: ' + n.replace('Neural', '').replace(/^(\w\w-\w\w)-/, '$1 ') : 'Offline: ' + n.replace('Microsoft ', '').replace(' Desktop', '')}</option>`).join('') : '<option value="">Default</option>';
+})();
+</script>
+</body>
+</html>

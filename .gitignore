@@ -1,0 +1,10 @@
+# Python environment & caches
+.venv/
+__pycache__/
+*.pyc
+
+# Personal data: API keys, uploads, generated videos, logs (created automatically on first run)
+data/
+
+# Packaging output
+ReelForge-share.zip
